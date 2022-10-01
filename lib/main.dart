@@ -1,6 +1,16 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: prefer_const_constructors, depend_on_referenced_packages
 
-void main() => runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:music_app/music/bloc/music_bloc.dart';
+import 'package:music_app/music/favorites_page.dart';
+import 'package:music_app/music/home_page.dart';
+import 'package:music_app/music/music_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+void main() => runApp(BlocProvider(
+      create: (context) => MusicBloc(),
+      child: MyApp(),
+    ));
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -8,15 +18,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Material App',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Material App Bar'),
-        ),
-        body: const Center(
-          child: Text('Hello World'),
-        ),
-      ),
+      theme: ThemeData.dark(),
+      routes: {
+        '/': (context) => HomePage(),
+        '/music': (context) => MusicPage(),
+        '/favorites': (context) => FavoritesPage(),
+      },
     );
   }
 }
