@@ -2,10 +2,18 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:music_app/music/favorites_bloc/favorites_bloc.dart';
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
 
+  @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,8 +23,55 @@ class FavoritesPage extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: 3,
+            child: _favoritesPage(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchInBrowser(Uri url) async {
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw 'Could not launch $url';
+    }
+  }
+
+  BlocConsumer<FavoritesBloc, FavoritesState> _favoritesPage() {
+    return BlocConsumer<FavoritesBloc, FavoritesState>(
+      listener: (context, state) {
+        if (state is FavoritesRemovingState) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(content: Text('Eliminando de favoritos')),
+            );
+        } else if (state is FavoritesRemovedState) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(content: Text('Eliminado de favoritos')),
+            );
+        } else if (state is FavoritesErrorState) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(content: Text('Error al eliminar de favoritos')),
+            );
+        } else if (state is FavoritesInitial) {
+          BlocProvider.of<FavoritesBloc>(context).add(FavoritesLoadEvent());
+        }
+      },
+      builder: (context, state) {
+        print("--------------------\nState: $state\n---------------------");
+        if (state is FavoritesInitial) {
+          BlocProvider.of<FavoritesBloc>(context).add(FavoritesLoadEvent());
+        }
+        if (state is FavoritesLoadedState || state is FavoritesRemovedState) {
+          return ListView.builder(
+              itemCount: state.favorites.length,
               itemBuilder: (BuildContext ctxt, int index) {
                 return Container(
                   padding: EdgeInsets.all(10),
@@ -28,21 +83,20 @@ class FavoritesPage extends StatelessWidget {
                             children: [
                               Container(
                                 alignment: Alignment.center,
-                                child: Image(
-                                  image: NetworkImage(
-                                    'https://i.scdn.co/image/ab67616d00001e02fc915b69600dce2991a61f13',
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _launchInBrowser(Uri.parse(
+                                        (state.favorites[index]['song_link'])));
+                                  },
+                                  child: Image(
+                                    image: NetworkImage(
+                                      state.favorites[index]['artwork'],
+                                    ),
+                                    width: 250,
                                   ),
-                                  width: 250,
                                 ),
                               )
                             ],
-                          ),
-                          Container(
-                            alignment: Alignment.topLeft,
-                            child: IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.favorite),
-                            ),
                           ),
                           Container(
                             alignment: Alignment.topCenter,
@@ -59,7 +113,7 @@ class FavoritesPage extends StatelessWidget {
                                     height: 5,
                                   ),
                                   Text(
-                                    "Symphony",
+                                    state.favorites[index]['title'],
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
@@ -69,7 +123,7 @@ class FavoritesPage extends StatelessWidget {
                                     height: 4,
                                   ),
                                   Text(
-                                    "Imagine Dragons",
+                                    state.favorites[index]['artist'],
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w300,
@@ -82,25 +136,57 @@ class FavoritesPage extends StatelessWidget {
                               ),
                             ),
                           ),
+                          Container(
+                            alignment: Alignment.topLeft,
+                            child: IconButton(
+                              onPressed: () {
+                                showDialog(
+                                    context: context,
+                                    builder: ((context) {
+                                      return AlertDialog(
+                                        title: Text(
+                                            '¿Estás seguro de eliminar este favorito?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('Cancelar'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              BlocProvider.of<FavoritesBloc>(
+                                                      context)
+                                                  .add(FavoriteRemoveEvent(
+                                                      musicInfo: state
+                                                          .favorites[index]));
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('Eliminar'),
+                                          ),
+                                        ],
+                                      );
+                                    }));
+                              },
+                              icon: Icon(Icons.favorite),
+                            ),
+                          ),
                         ],
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Divider(
-                        height: 10,
-                        thickness: 2,
-                        indent: 20,
-                        endIndent: 20,
                       ),
                     ],
                   ),
                 );
-              },
+              });
+        } else if (state is FavoritesLoadingState) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: Colors.purpleAccent,
             ),
-          ),
-        ],
-      ),
+          );
+        } else {
+          return Container();
+        }
+      },
     );
   }
 }

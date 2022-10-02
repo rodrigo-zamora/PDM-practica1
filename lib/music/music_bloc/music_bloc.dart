@@ -99,6 +99,7 @@ class MusicBloc extends Bloc<MusicEvent, MusicState> {
         request.files.add(httpFile);
         request.fields['api_token'] = dotenv.env['API_TOKEN']!;
         request.fields['return'] = 'apple_music,spotify';
+        request.fields['method'] = 'recognize';
         final response = await request.send();
         final responseString = await response.stream.bytesToString();
         final res = jsonDecode(responseString);

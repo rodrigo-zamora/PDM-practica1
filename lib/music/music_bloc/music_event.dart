@@ -6,5 +6,3 @@ abstract class MusicEvent {
 }
 
 class RecordMusicEvent extends MusicEvent {}
-
-class AddFavoriteEvent extends MusicEvent {}
