@@ -69,7 +69,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         if (state is FavoritesInitial) {
           BlocProvider.of<FavoritesBloc>(context).add(FavoritesLoadEvent());
         }
-        if (state is FavoritesLoadedState || state is FavoritesRemovedState) {
+        if (state is FavoritesLoadedState || state is FavoritesUpdatedState) {
           return ListView.builder(
               itemCount: state.favorites.length,
               itemBuilder: (BuildContext ctxt, int index) {

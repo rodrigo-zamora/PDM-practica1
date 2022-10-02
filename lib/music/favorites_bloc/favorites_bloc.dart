@@ -120,7 +120,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
       print("\t\tSaved");
 
       emit(FavoritesRemovedState());
-      emit(FavoritesLoadedState(favorites: _favorites));
+      emit(FavoritesUpdatedState(favorites: _favorites));
     } catch (e) {
       print("\t\tError: $e");
       emit(FavoritesErrorState(errorMessage: "Error al eliminar favoritos"));
